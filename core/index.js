@@ -5,6 +5,7 @@ const ApiDocGenerator = require('./utils/docGenerator');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 require('./DB/connect'); // Ensure DB connection is established
 require('../webApp/index'); // Start the web app
+require('../discordBot/index'); // Start the Discord bot
 
 const app = express();
 const CORE_PORT = process.env.CORE_PORT;
