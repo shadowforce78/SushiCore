@@ -8,11 +8,21 @@ router.put('/note/:id', async (req, res) => {
     const { title, tag, content } = req.body;
     
     try {
+        // Traiter les tags : si c'est une string, la séparer par des virgules
+        let processedTags = [];
+        if (tag !== undefined) {
+            if (Array.isArray(tag)) {
+                processedTags = tag.filter(t => t && t.trim() !== '').map(t => t.trim());
+            } else if (typeof tag === 'string') {
+                processedTags = tag.split(',').filter(t => t && t.trim() !== '').map(t => t.trim());
+            }
+        }
+        
         const updatedNote = await Note.findByIdAndUpdate(
             id,
             { 
                 title, 
-                tag, 
+                tag: processedTags, 
                 content, 
                 updatedAt: new Date()
             },

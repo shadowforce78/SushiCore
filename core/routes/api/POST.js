@@ -5,7 +5,21 @@ const Note = require('../../DB/models/note');
 router.post('/note', async (req, res) => {
     const { title, tag, content } = req.body;
     try {
-        const newNote = new Note({ title, tag, content });
+        // Traiter les tags : si c'est une string, la séparer par des virgules
+        let processedTags = [];
+        if (tag) {
+            if (Array.isArray(tag)) {
+                processedTags = tag.filter(t => t && t.trim() !== '').map(t => t.trim());
+            } else if (typeof tag === 'string') {
+                processedTags = tag.split(',').filter(t => t && t.trim() !== '').map(t => t.trim());
+            }
+        }
+        
+        const newNote = new Note({ 
+            title, 
+            tag: processedTags, 
+            content 
+        });
         await newNote.save();
         res.status(201).json(newNote);
     } catch (error) {

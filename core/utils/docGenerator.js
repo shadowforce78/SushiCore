@@ -616,7 +616,7 @@ class ApiDocGenerator {
     getPlaceholder(paramName) {
         const placeholders = {
             'title': 'Ma première note',
-            'tag': 'personnel, travail, idée',
+            'tag': 'personnel, travail, idée importante',
             'content': 'Contenu de votre note...',
             'name': 'Mon nom',
             'email': 'exemple@email.com',

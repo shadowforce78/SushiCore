@@ -277,6 +277,9 @@
             border-radius: 20px;
             font-size: 0.8rem;
             font-weight: 500;
+            display: inline-block;
+            margin-right: 0.5rem;
+            margin-bottom: 0.25rem;
         }
 
         .note-content {
@@ -503,6 +506,8 @@
             padding: 0.2rem 0.6rem;
             border-radius: 20px;
             font-size: 0.8rem;
+            display: inline-block;
+            margin-right: 0.25rem;
         }
 
         .note-list-date {
@@ -689,6 +694,13 @@
         .btn .loading {
             color: inherit;
         }
+
+        .form-help {
+            color: #718096;
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -862,8 +874,9 @@
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="note-tag">Tag</label>
-                                    <input type="text" id="note-tag" placeholder="Ex: personnel, travail, idée..." list="tag-suggestions">
+                                    <label for="note-tag">Tags (séparés par des virgules)</label>
+                                    <input type="text" id="note-tag" placeholder="Ex: personnel, travail, idée importante..." list="tag-suggestions">
+                                    <small class="form-help">Séparez vos tags par des virgules</small>
                                     <datalist id="tag-suggestions"></datalist>
                                 </div>
                                 
@@ -1013,7 +1026,17 @@
         }
 
         function extractTags() {
-            allTags = [...new Set(notes.filter(note => note.tag).map(note => note.tag))];
+            const tagSet = new Set();
+            notes.forEach(note => {
+                if (note.tag && Array.isArray(note.tag)) {
+                    note.tag.forEach(tag => {
+                        if (tag && tag.trim()) {
+                            tagSet.add(tag.trim());
+                        }
+                    });
+                }
+            });
+            allTags = Array.from(tagSet);
         }
 
         function updateTagFilter() {
@@ -1040,8 +1063,10 @@
             let filteredNotes = notes.filter(note => {
                 const matchesSearch = !searchTerm || 
                     note.title.toLowerCase().includes(searchTerm) || 
-                    note.content.toLowerCase().includes(searchTerm);
-                const matchesTag = !tagFilter || note.tag === tagFilter;
+                    note.content.toLowerCase().includes(searchTerm) ||
+                    (note.tag && note.tag.some(tag => tag.toLowerCase().includes(searchTerm)));
+                const matchesTag = !tagFilter || 
+                    (note.tag && note.tag.includes(tagFilter));
                 return matchesSearch && matchesTag;
             });
 
@@ -1073,7 +1098,10 @@
                     <div class="note-header">
                         <div>
                             <h3 class="note-title">${escapeHtml(note.title)}</h3>
-                            ${note.tag ? `<span class="note-tag">${escapeHtml(note.tag)}</span>` : ''}
+                            ${note.tag && note.tag.length > 0 ? 
+                                note.tag.map(tag => `<span class="note-tag">${escapeHtml(tag)}</span>`).join(' ') : 
+                                ''
+                            }
                         </div>
                     </div>
                     <div class="note-content">
@@ -1108,7 +1136,10 @@
                         </div>
                     </div>
                     <div class="note-list-meta">
-                        ${note.tag ? `<span class="note-list-tag">${escapeHtml(note.tag)}</span>` : ''}
+                        ${note.tag && note.tag.length > 0 ? 
+                            note.tag.map(tag => `<span class="note-list-tag">${escapeHtml(tag)}</span>`).join(' ') : 
+                            ''
+                        }
                         <span class="note-list-date">${formatDate(note.createdAt)}</span>
                     </div>
                     <div class="note-list-actions">
@@ -1157,7 +1188,7 @@
             editingNoteId = noteId;
             document.getElementById('modal-title').textContent = 'Modifier la note';
             document.getElementById('note-title').value = note.title;
-            document.getElementById('note-tag').value = note.tag || '';
+            document.getElementById('note-tag').value = note.tag && note.tag.length > 0 ? note.tag.join(', ') : '';
             document.getElementById('note-content').value = note.content;
             document.getElementById('save-note-btn').querySelector('.btn-text').textContent = '💾 Modifier';
             
