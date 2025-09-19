@@ -4,7 +4,6 @@ const Note = require('../../DB/models/note');
 
 // Modifier une note existante
 router.put('/note/:id', async (req, res) => {
-    const { id } = req.params;
     const { title, tag, content } = req.body;
     
     try {
@@ -19,8 +18,8 @@ router.put('/note/:id', async (req, res) => {
         }
         
         const updatedNote = await Note.findByIdAndUpdate(
-            id,
-            { 
+            req.params.id,
+            {
                 title, 
                 tag: processedTags, 
                 content, 

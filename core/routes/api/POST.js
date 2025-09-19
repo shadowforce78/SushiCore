@@ -1,10 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const Note = require('../../DB/models/note');
+const crypto = require('crypto');
 
 router.post('/note', async (req, res) => {
     const { title, tag, content } = req.body;
     try {
+        // Générer un UUID unique
+        const uuid = crypto.randomUUID();
+        
         // Traiter les tags : si c'est une string, la séparer par des virgules
         let processedTags = [];
         if (tag) {
@@ -16,6 +20,7 @@ router.post('/note', async (req, res) => {
         }
         
         const newNote = new Note({ 
+            uuid,
             title, 
             tag: processedTags, 
             content 

@@ -19,19 +19,43 @@ client.on("interactionCreate", async (interaction) => {
                 });
             } else if (option.value) args.push(option.value);
         }
-         const userperm = interaction.member.permissions.has(cmd.userperm);
+        
+        // Vérifier les permissions utilisateur seulement si elles sont requises
+        if (cmd.userperm) {
+            if (!interaction.member) {
+                return interaction.followUp({
+                    content: "Cette commande ne peut être utilisée que dans un serveur.",
+                });
+            }
+            
+            const userperm = interaction.member.permissions.has(cmd.userperm);
+            if (!userperm) {
+                return interaction.followUp({
+                    content: `Vous avez besoin de la permission \`${cmd.userperm}\` pour utiliser cette commande.`,
+                });
+            }
+        }
 
-        if (!userperm)
-            return interaction.followUp({
-                content: `You need \`${cmd.userperm || []}\` Permissions`,
-            });
-
-        const botperm = interaction.guild.me.permissions.has(cmd.botperm);
-        if (!botperm)
-            return interaction.followUp({
-                content: `I need \`${cmd.botperm || []}\` Permissions`,
-            });
-        interaction.member = interaction.guild.members.cache.get(interaction.user.id);
+        // Vérifier les permissions du bot seulement si elles sont requises
+        if (cmd.botperm) {
+            if (!interaction.guild || !interaction.guild.me) {
+                return interaction.followUp({
+                    content: "Cette commande ne peut être utilisée que dans un serveur.",
+                });
+            }
+            
+            const botperm = interaction.guild.me.permissions.has(cmd.botperm);
+            if (!botperm) {
+                return interaction.followUp({
+                    content: `Le bot a besoin de la permission \`${cmd.botperm}\` pour utiliser cette commande.`,
+                });
+            }
+        }
+        
+        // S'assurer que interaction.member est défini dans le contexte de serveur
+        if (interaction.guild && !interaction.member) {
+            interaction.member = interaction.guild.members.cache.get(interaction.user.id);
+        }
 
         cmd.run(client, interaction, args);
     }
