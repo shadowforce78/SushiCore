@@ -58,7 +58,7 @@ module.exports = async (client) => {
             }
         });
         
-        client.on("clientReady", async () => {
+        client.on("ready", async () => {
             try {
                 // Register slash commands
                 if (arrayOfSlashCommands.length > 0) {

@@ -5,12 +5,24 @@ const API = process.env.API;
 
 module.exports = {
     name: "addnote",
-    description: "Retrieves a note from the database",
-    type: 3, // ApplicationCommandType.ChatInput,
+    description: "Adds a note to the database",
+    type: 1, // ApplicationCommandType.ChatInput (slash command)
     options: [
         {
-            name: "note_id",
-            description: "The ID of the note to retrieve",
+            name: "title",
+            description: "The title of the note",
+            type: 3, // STRING type
+            required: true,
+        },
+        {
+            name: "content",
+            description: "The content of the note",
+            type: 3, // STRING type
+            required: true,
+        },
+        {
+            name: "tags",
+            description: "Comma-separated list of tags for the note",
             type: 3, // STRING type
             required: false,
         }
@@ -22,18 +34,24 @@ module.exports = {
      * @param {String[]} args
      */
     run: async (client, interaction, args) => {
-        if (!interaction.options.getString("note_id")) {
-            const response = await fetch(`${API}/api/note`, { method: 'GET' });
-            const notes = await response.json();
-            if (notes.length === 0) {
-                return interaction.followUp({ content: "No notes found." });
-            }
+        const title = interaction.options.getString("title");
+        const content = interaction.options.getString("content");
+        const tags = interaction.options.getString("tags")?.split(",").map(tag => tag.trim()) || [];
 
+        const response = await fetch(`${API}/api/note`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ title, tags, content })
+        });
 
-            const formattedNotes = notes.map(note => {
-                return `**ID:** ${note._id}\n**Title:** ${note.title}\n**Tags:** ${note.tag.join(', ')}\n**Content:** ${note.content}\n**Created At:** ${new Date(note.createdAt).toLocaleString()}\n**Updated At:** ${new Date(note.updatedAt).toLocaleString()}\n`;
-            }).join('\n---\n');
-            return interaction.followUp({ content: formattedNotes });
+        if (response.ok) {
+            const newNote = await response.json();
+            return interaction.followUp({ content: `Note added successfully: ${newNote.title}` });
+        } else {
+            const error = await response.json();
+            return interaction.followUp({ content: `Error adding note: ${error.message}` });
         }
     },
 };

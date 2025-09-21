@@ -1,4 +1,4 @@
-const { Client, CommandInteraction, ApplicationCommandType } = require("discord.js");
+const { Client, CommandInteraction, MessageEmbed } = require("discord.js");
 const path = require('path');
 require('dotenv').config(path.join(__dirname, '../../.env'));
 const API = process.env.API;
@@ -6,7 +6,7 @@ const API = process.env.API;
 module.exports = {
     name: "getnote",
     description: "Retrieves a note from the database",
-    type: 3,
+    type: 1, // ApplicationCommandType.ChatInput (slash command)
     options: [
         {
             name: "note_id",
@@ -36,10 +36,19 @@ module.exports = {
                 }
 
                 const formattedNotes = notes.map(note => {
-                    return `**UUID:** ${note.uuid}\n**Title:** ${note.title}\n**Tags:** ${note.tag.join(', ')}\n**Content:** ${note.content.substring(0, 100)}...\n**Created:** ${new Date(note.createdAt).toLocaleString()}\n`;
-                }).join('\n---\n');
+                    const embed = new MessageEmbed()
+                        .setTitle(note.title)
+                        .addFields(
+                            { name: "UUID", value: note.uuid },
+                            { name: "Tags", value: note.tags.join(', ') },
+                            { name: "Content", value: note.content.substring(0, 100) + '...' },
+                            { name: "Created", value: new Date(note.createdAt).toLocaleString() }
+                        )
+                        .setColor("#0099ff");
+                    return embed;
+                });
 
-                return interaction.followUp({ content: formattedNotes });
+                return interaction.followUp({ embeds: formattedNotes });
             } else {
                 // Récupérer une note spécifique par ID
                 const noteId = interaction.options.getString("note_id");
@@ -59,9 +68,18 @@ module.exports = {
                 }
 
                 const note = await response.json();
-                const formattedNote = `**UUID:** ${note.uuid}\n**Title:** ${note.title}\n**Tags:** ${note.tag.join(', ')}\n**Content:** ${note.content}\n**Created:** ${new Date(note.createdAt).toLocaleString()}\n**Updated:** ${new Date(note.updatedAt).toLocaleString()}\n`;
+                const formattedNote = new MessageEmbed()
+                    .setTitle(note.title)
+                    .addFields(
+                        { name: "UUID", value: note.uuid },
+                        { name: "Tags", value: note.tags.join(', ') },
+                        { name: "Content", value: note.content },
+                        { name: "Created", value: new Date(note.createdAt).toLocaleString() },
+                        { name: "Updated", value: new Date(note.updatedAt).toLocaleString() }
+                    )
+                    .setColor("#0099ff");
 
-                return interaction.followUp({ content: formattedNote });
+                return interaction.followUp({ embeds: [formattedNote] });
             }
         } catch (error) {
             console.error('Erreur dans getnote command:', error);
