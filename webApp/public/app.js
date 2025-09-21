@@ -78,7 +78,7 @@ async function loadNotes() {
     empty.style.display = 'none';
 
     try {
-        const response = await fetch(`${API_BASE_URL}/notes`);
+        const response = await fetch(`${API_BASE_URL}/note`);
 
         if (response.ok) {
             notes = await response.json();

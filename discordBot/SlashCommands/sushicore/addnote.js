@@ -23,7 +23,7 @@ module.exports = {
      */
     run: async (client, interaction, args) => {
         if (!interaction.options.getString("note_id")) {
-            const response = await fetch(`${API}/api/notes`, { method: 'GET' });
+            const response = await fetch(`${API}/api/note`, { method: 'GET' });
             const notes = await response.json();
             if (notes.length === 0) {
                 return interaction.followUp({ content: "No notes found." });

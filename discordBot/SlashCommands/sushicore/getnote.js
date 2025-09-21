@@ -6,7 +6,7 @@ const API = process.env.API;
 module.exports = {
     name: "getnote",
     description: "Retrieves a note from the database",
-    type: ApplicationCommandType.ChatInput,
+    type: 3,
     options: [
         {
             name: "note_id",
@@ -25,7 +25,7 @@ module.exports = {
         try {
             if (!interaction.options.getString("note_id")) {
                 // Récupérer toutes les notes
-                const response = await fetch(`${API}/api/notes`, { method: 'GET' });
+                const response = await fetch(`${API}/api/note`, { method: 'GET' });
                 if (!response.ok) {
                     return interaction.followUp({ content: "Erreur lors de la récupération des notes." });
                 }
@@ -43,12 +43,11 @@ module.exports = {
             } else {
                 // Récupérer une note spécifique par ID
                 const noteId = interaction.options.getString("note_id");
-                const response = await fetch(`${API}/api/notes`, {
-                    method: 'POST',
+                const response = await fetch(`${API}/api/note/${noteId}`, {
+                    method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ id: noteId })
+                    }
                 });
 
                 if (response.status === 404) {
@@ -56,7 +55,7 @@ module.exports = {
                 }
 
                 if (!response.ok) {
-                    return interaction.followUp({ content: "Erreur lors de la récupération de la note." });
+                    return interaction.followUp({ content: `Erreur lors de la récupération de la note: ${response.statusText}` });
                 }
 
                 const note = await response.json();

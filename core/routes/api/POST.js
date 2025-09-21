@@ -33,23 +33,5 @@ router.post('/note', async (req, res) => {
     }
 });
 
-// Récupérer une note par ID via POST avec body param
-router.post('/notes', async (req, res) => {
-    const { id } = req.body;
-    try {
-        if (!id) {
-            return res.status(400).json({ error: 'ID is required in body' });
-        }
-        
-        const note = await Note.findById(id);
-        if (!note) {
-            return res.status(404).json({ error: 'Note not found' });
-        }
-        res.json(note);
-    } catch (error) {
-        console.error('Error fetching note by ID:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
 
 module.exports = router;
