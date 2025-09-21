@@ -1,0 +1,28 @@
+[90m[23:47:58][39m [33m[Warning][39m Attempting to connect to the Discord bot... (1)
+[90m[23:47:58][39m [34m[Info][39m Already connected to MongoDB database
+[90m[23:47:58][39m [34m[Info][39m Loaded new message command: messagecommand-eval.js
+[90m[23:47:58][39m [34m[Info][39m Loaded new message command: messagecommand-reload.js
+[90m[23:47:58][39m [34m[Info][39m Loaded new application command: slashcommand-eval.js
+[90m[23:47:58][39m [34m[Info][39m Loaded new application command: slashcommand-reload.js
+[90m[23:47:58][39m [34m[Info][39m Loaded new message command: messagecommand-help.js
+[90m[23:47:58][39m [34m[Info][39m Loaded new application command: slashcommand-help.js
+[90m[23:47:58][39m [34m[Info][39m Loaded new application command: messagecontext-messageinfo.js
+[90m[23:47:58][39m [34m[Info][39m Loaded new application command: slashcommand-autocomplete.js
+[90m[23:47:58][39m [34m[Info][39m Loaded new application command: slashcommand-components.js
+[90m[23:47:58][39m [34m[Info][39m Loaded new application command: slashcommand-show-modal.js
+[90m[23:47:58][39m [34m[Info][39m Loaded new application command: usercontext-userinfo.js
+[90m[23:47:58][39m [34m[Info][39m Loaded new message command: messagecommand-ping.js
+[90m[23:47:58][39m [34m[Info][39m Loaded new message command: messagecommand-setprefix.js
+[90m[23:47:58][39m [34m[Info][39m Loaded new application command: slashcommand-getnote.js
+[90m[23:47:58][39m [34m[Info][39m Loaded new application command: slashcommand-ping.js
+[90m[23:47:58][39m [32m[OK][39m Successfully loaded 10 application commands and 5 message commands.
+[90m[23:47:58][39m [34m[Info][39m Loaded new component (type: autocomplete) : example-autocomplete.js
+[90m[23:47:58][39m [34m[Info][39m Loaded new component (type: button) : example-button.js
+[90m[23:47:58][39m [34m[Info][39m Loaded new component (type: modal) : example-modal.js
+[90m[23:47:58][39m [34m[Info][39m Loaded new component (type: select) : example-menu.js
+[90m[23:47:58][39m [32m[OK][39m Successfully loaded 4 components.
+[90m[23:47:58][39m [34m[Info][39m Loaded new event: onReady.js
+[90m[23:47:58][39m [32m[OK][39m Successfully loaded 1 events.
+[90m[23:47:58][39m [33m[Warning][39m Attempting to register application commands... (this might take a while!)
+[90m[23:47:58][39m [32m[OK][39m Logged in as SushiCore, took 0.697s.
+[90m[23:47:59][39m [32m[OK][39m Successfully registered application commands. For specific guild? No
