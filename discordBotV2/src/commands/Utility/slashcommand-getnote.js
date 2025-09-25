@@ -10,7 +10,7 @@ const API = process.env.API;
 module.exports = new ApplicationCommand({
     command: {
         name: 'getnote',
-        description: 'Replies with Pong!',
+        description: 'Retrieves notes from the system.',
         type: 1,
         options: [
             {

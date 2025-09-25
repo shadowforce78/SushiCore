@@ -56,7 +56,7 @@ class DiscordBot extends Client {
 
     constructor() {
         super({
-            intents: 3276799,
+            intents: 53608447,
             partials: [
                 Partials.Channel,
                 Partials.GuildMember,
