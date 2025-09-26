@@ -699,3 +699,46 @@ body {
     margin-top: 0.25rem;
     display: block;
 }
+
+/* Discord Messages Styles */
+.discord-messages-interface {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.discord-messages-content {
+    flex: 1;
+    padding: 1rem;
+}
+
+.discord-messages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1rem;
+    animation: fadeInUp 0.5s ease-out;
+}
+
+.message-image-preview img {
+    transition: transform 0.2s ease;
+}
+
+.message-image-preview img:hover {
+    transform: scale(1.02);
+}
+
+.message-preview-content {
+    background: #f7fafc;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+}
+
+.note-uuid {
+    font-family: 'Courier New', monospace;
+    font-size: 0.7rem;
+    color: #718096;
+    background: #edf2f7;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+}

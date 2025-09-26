@@ -27,6 +27,11 @@
                         <span class="nav-text">Notes</span>
                     </div>
                     
+                    <div class="nav-item" onclick="switchModule('discord-messages')">
+                        <span class="nav-icon">💬</span>
+                        <span class="nav-text">Messages Discord</span>
+                    </div>
+                    
                     <div class="nav-item disabled">
                         <span class="nav-icon">📅</span>
                         <span class="nav-text">Calendrier</span>
@@ -218,6 +223,94 @@
                                     Annuler
                                 </button>
                                 <button type="button" class="btn btn-danger" id="confirm-delete-btn" onclick="confirmDelete()">
+                                    <span class="btn-text">🗑️ Supprimer</span>
+                                    <span class="loading" style="display: none;">⏳ Suppression...</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Discord Messages Module -->
+                <div class="module-container" id="discord-messages-module">
+                    <div class="discord-messages-interface">
+                        <!-- Barre d'outils -->
+                        <div class="notes-toolbar">
+                            <div class="toolbar-left">
+                                <input type="text" id="search-discord-messages" placeholder="🔍 Rechercher dans les messages..." class="search-input">
+                            </div>
+                            <div class="toolbar-right">
+                                <button class="btn btn-outline" onclick="refreshDiscordMessages()">
+                                    <span>🔄</span>
+                                    Actualiser
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Zone de contenu principal -->
+                        <div class="discord-messages-content">
+                            <!-- Loading -->
+                            <div class="loading" id="discord-messages-loading">
+                                <div class="spinner"></div>
+                                <div>Chargement des messages Discord...</div>
+                            </div>
+                            
+                            <!-- Grille des messages -->
+                            <div class="discord-messages-grid" id="discord-messages-grid"></div>
+                            
+                            <!-- État vide -->
+                            <div class="empty-state" id="discord-messages-empty" style="display: none;">
+                                <div class="empty-state-icon">💬</div>
+                                <h3>Aucun message Discord trouvé</h3>
+                                <p>Les messages sauvegardés via la commande /savemessage apparaîtront ici.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal d'ajout de message Discord -->
+                    <div class="modal" id="add-discord-message-modal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>Ajouter un message Discord</h3>
+                                <button class="modal-close" onclick="closeAddDiscordMessageModal()">&times;</button>
+                            </div>
+                            <form id="discord-message-form" class="modal-body">
+                                <div class="form-group">
+                                    <label for="discord-message-link">Lien du message Discord *</label>
+                                    <input type="url" id="discord-message-link" required placeholder="https://discord.com/channels/...">
+                                    <small class="form-help">Collez le lien du message Discord à sauvegarder</small>
+                                </div>
+                                
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline" onclick="closeAddDiscordMessageModal()">
+                                        Annuler
+                                    </button>
+                                    <button type="submit" class="btn btn-primary" id="save-discord-message-btn">
+                                        <span class="btn-text">💾 Sauvegarder</span>
+                                        <span class="loading" style="display: none;">⏳ Sauvegarde...</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Modal de confirmation de suppression -->
+                    <div class="modal" id="delete-discord-message-modal">
+                        <div class="modal-content modal-small">
+                            <div class="modal-header">
+                                <h3>Confirmer la suppression</h3>
+                                <button class="modal-close" onclick="closeDeleteDiscordMessageModal()">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Êtes-vous sûr de vouloir supprimer ce message Discord ?</p>
+                                <p class="warning-text">⚠️ Cette action est irréversible.</p>
+                                <div class="message-preview" id="delete-discord-message-preview"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline" onclick="closeDeleteDiscordMessageModal()">
+                                    Annuler
+                                </button>
+                                <button type="button" class="btn btn-danger" id="confirm-delete-discord-message-btn" onclick="confirmDeleteDiscordMessage()">
                                     <span class="btn-text">🗑️ Supprimer</span>
                                     <span class="loading" style="display: none;">⏳ Suppression...</span>
                                 </button>

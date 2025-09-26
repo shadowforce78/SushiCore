@@ -4,11 +4,13 @@ const ApplicationCommand = require("../../structure/ApplicationCommand");
 const path = require('path');
 require('dotenv').config(path.join(__dirname, '../../.env'));
 
+const DiscordMessageSchema = require('../../../../core/DB/models/discordMessage');
+
 
 module.exports = new ApplicationCommand({
     command: {
-        name: 'getmessage',
-        description: "Test command (just for test)",
+        name: 'savemessage',
+        description: "Save a discord message by its link",
         type: 1,
         options: [
             {
@@ -236,24 +238,9 @@ module.exports = new ApplicationCommand({
                 }
             }
 
-            // Construire un seul embed: texte agrégé + première image trouvée
+            // Sauvegarder dans la base de données
             const okResults = results.filter(r => !r.error);
-            const aggregatedText = okResults
-                .map(r => r.contentText)
-                .filter(Boolean)
-                .join('\n\n')
-                .trim();
-            const firstImage = okResults.find(r => (r.imageUrls || []).length > 0)?.imageUrls[0];
-
-            const singleEmbed = new EmbedBuilder()
-                .setTitle(okResults.length > 1 ? 'Messages récupérés' : 'Message récupéré')
-                .setColor('#0099ff');
-            if (links.length > 0) {
-                try { singleEmbed.setURL(links[0]); } catch {}
-            }
-            singleEmbed.setDescription((aggregatedText || '(aucun texte)').slice(0, 4000));
-            if (firstImage) singleEmbed.setImage(firstImage);
-
+            
             // Si tous les résultats sont en erreur, retourner la première erreur
             if (okResults.length === 0) {
                 const firstErr = results[0]?.error || 'Erreur inconnue';
@@ -261,7 +248,38 @@ module.exports = new ApplicationCommand({
                 return;
             }
 
-            await interaction.editReply({ embeds: [singleEmbed] });
+            const aggregatedText = okResults
+                .map(r => r.contentText)
+                .filter(Boolean)
+                .join('\n\n')
+                .trim();
+            const firstImage = okResults.find(r => (r.imageUrls || []).length > 0)?.imageUrls[0];
+            
+            // Générer un UUID pour ce message sauvegardé
+            const crypto = require('crypto');
+            const uuid = crypto.randomUUID();
+            
+            try {
+                const discordMessage = new DiscordMessageSchema({
+                    uuid: uuid,
+                    messageLink: links[0], // Premier lien fourni
+                    messageText: aggregatedText || null,
+                    messageImage: firstImage || null
+                });
+                
+                await discordMessage.save();
+                
+                await interaction.editReply({ 
+                    content: `✅ Message sauvegardé avec succès !\n**UUID:** \`${uuid}\`\n**Lien:** ${links[0]}${aggregatedText ? `\n**Texte:** ${aggregatedText.slice(0, 100)}${aggregatedText.length > 100 ? '...' : ''}` : ''}${firstImage ? `\n**Image:** Oui` : ''}` 
+                });
+            } catch (saveError) {
+                console.error('Erreur lors de la sauvegarde:', saveError);
+                if (saveError.code === 11000) {
+                    await interaction.editReply({ content: `❌ Ce message semble déjà avoir été sauvegardé.` });
+                } else {
+                    await interaction.editReply({ content: `❌ Erreur lors de la sauvegarde: ${saveError.message}` });
+                }
+            }
         } catch (error) {
             console.error('Erreur dans getmessage command:', error);
             if (interaction.deferred || interaction.replied) {

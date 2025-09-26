@@ -37,6 +37,8 @@ function switchModule(moduleName) {
     // Charger les données si nécessaire
     if (moduleName === 'notes') {
         loadNotes();
+    } else if (moduleName === 'discord-messages') {
+        loadDiscordMessages();
     }
 }
 
@@ -53,6 +55,12 @@ function updateHeader(moduleName) {
             titleElement.textContent = 'Mes Notes';
             primaryAction.style.display = 'flex';
             primaryAction.onclick = showCreateNoteForm;
+            break;
+        case 'discord-messages':
+            titleElement.textContent = 'Messages Discord';
+            primaryAction.style.display = 'flex';
+            primaryAction.innerHTML = '<span>➕</span>Ajouter un message';
+            primaryAction.onclick = showAddDiscordMessageForm;
             break;
         default:
             titleElement.textContent = 'Module';
@@ -475,3 +483,295 @@ function showError(message) {
         setTimeout(() => document.body.removeChild(notification), 300);
     }, 4000);
 }
+
+// Gestion des messages Discord
+let discordMessages = [];
+let messageToDelete = null;
+
+function showAddDiscordMessageForm() {
+    document.getElementById('add-discord-message-modal').style.display = 'block';
+    document.getElementById('discord-message-link').focus();
+}
+
+function closeAddDiscordMessageModal() {
+    const modal = document.getElementById('add-discord-message-modal');
+    const form = document.getElementById('discord-message-form');
+    
+    modal.style.display = 'none';
+    form.reset();
+    
+    // Reset button state
+    const btn = document.getElementById('save-discord-message-btn');
+    btn.disabled = false;
+    btn.querySelector('.btn-text').style.display = 'inline';
+    btn.querySelector('.loading').style.display = 'none';
+}
+
+async function saveDiscordMessageFromLink(messageLink) {
+    const btn = document.getElementById('save-discord-message-btn');
+    
+    // Set loading state
+    btn.disabled = true;
+    btn.querySelector('.btn-text').style.display = 'none';
+    btn.querySelector('.loading').style.display = 'inline';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/discord-message`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ messageLink })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Erreur lors de la sauvegarde');
+        }
+        
+        const result = await response.json();
+        
+        showNotification('✅ Message Discord sauvegardé avec succès!', 'success');
+        closeAddDiscordMessageModal();
+        
+        // Reload the messages to show the new one
+        await loadDiscordMessages();
+        
+    } catch (error) {
+        console.error('Erreur:', error);
+        showNotification(error.message, 'error');
+        
+        // Reset button state
+        btn.disabled = false;
+        btn.querySelector('.btn-text').style.display = 'inline';
+        btn.querySelector('.loading').style.display = 'none';
+    }
+}
+
+async function loadDiscordMessages() {
+    const loading = document.getElementById('discord-messages-loading');
+    const grid = document.getElementById('discord-messages-grid');
+    const empty = document.getElementById('discord-messages-empty');
+
+    loading.style.display = 'flex';
+    grid.style.display = 'none';
+    empty.style.display = 'none';
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/discord-message`);
+        const data = await response.json();
+
+        if (response.ok) {
+            discordMessages = data;
+            displayDiscordMessages();
+        } else {
+            throw new Error(data.error || 'Erreur lors du chargement des messages');
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        showError('Impossible de charger les messages Discord');
+    } finally {
+        loading.style.display = 'none';
+    }
+}
+
+function displayDiscordMessages() {
+    const grid = document.getElementById('discord-messages-grid');
+    const empty = document.getElementById('discord-messages-empty');
+    
+    if (discordMessages.length === 0) {
+        empty.style.display = 'block';
+        return;
+    }
+
+    grid.style.display = 'grid';
+    
+    const filteredMessages = filterDiscordMessages();
+    grid.innerHTML = filteredMessages.map(message => createDiscordMessageCard(message)).join('');
+}
+
+function createDiscordMessageCard(message) {
+    const date = new Date(message.createdAt).toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    const truncatedText = message.messageText 
+        ? (message.messageText.length > 100 
+            ? message.messageText.substring(0, 100) + '...' 
+            : message.messageText)
+        : 'Aucun texte';
+
+    return `
+        <div class="note-card">
+            <div class="note-header">
+                <div class="note-meta">
+                    <span class="note-date">💬 ${date}</span>
+                </div>
+                <div class="note-actions">
+                    <button class="btn-icon" onclick="openDiscordMessage('${message.uuid}')" title="Ouvrir le lien">
+                        <span>🔗</span>
+                    </button>
+                    <button class="btn-icon btn-danger" onclick="showDeleteDiscordMessageModal('${message.uuid}')" title="Supprimer">
+                        <span>🗑️</span>
+                    </button>
+                </div>
+            </div>
+            <div class="note-content">
+                <p class="note-text">${truncatedText}</p>
+                ${message.messageImage ? `<div class="message-image-preview">
+                    <img src="${message.messageImage}" alt="Image du message" onclick="openImageFullscreen('${message.messageImage}')" style="max-width: 100%; height: auto; border-radius: 8px; cursor: pointer; margin-top: 10px;">
+                </div>` : ''}
+            </div>
+            <div class="note-footer">
+                <span class="note-uuid">UUID: ${message.uuid}</span>
+            </div>
+        </div>
+    `;
+}
+
+function filterDiscordMessages() {
+    const searchTerm = document.getElementById('search-discord-messages').value.toLowerCase();
+    
+    return discordMessages.filter(message => {
+        const matchesSearch = !searchTerm || 
+            (message.messageText && message.messageText.toLowerCase().includes(searchTerm)) ||
+            message.uuid.toLowerCase().includes(searchTerm);
+        
+        return matchesSearch;
+    });
+}
+
+function openDiscordMessage(uuid) {
+    const message = discordMessages.find(m => m.uuid === uuid);
+    if (message && message.messageLink) {
+        window.open(message.messageLink, '_blank');
+    }
+}
+
+function openImageFullscreen(imageUrl) {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        cursor: pointer;
+    `;
+    
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.style.cssText = 'max-width: 90%; max-height: 90%; border-radius: 8px;';
+    
+    modal.appendChild(img);
+    document.body.appendChild(modal);
+    
+    modal.onclick = () => document.body.removeChild(modal);
+}
+
+function showDeleteDiscordMessageModal(uuid) {
+    const message = discordMessages.find(m => m.uuid === uuid);
+    if (!message) return;
+
+    messageToDelete = message;
+    
+    const modal = document.getElementById('delete-discord-message-modal');
+    const preview = document.getElementById('delete-discord-message-preview');
+    
+    preview.innerHTML = `
+        <div class="message-preview-content">
+            <strong>UUID:</strong> ${message.uuid}<br>
+            <strong>Date:</strong> ${new Date(message.createdAt).toLocaleDateString('fr-FR')}<br>
+            <strong>Texte:</strong> ${message.messageText ? message.messageText.substring(0, 100) + (message.messageText.length > 100 ? '...' : '') : 'Aucun texte'}
+        </div>
+    `;
+    
+    modal.classList.add('active');
+}
+
+function closeDeleteDiscordMessageModal() {
+    document.getElementById('delete-discord-message-modal').classList.remove('active');
+    messageToDelete = null;
+}
+
+async function confirmDeleteDiscordMessage() {
+    if (!messageToDelete) return;
+
+    const btn = document.getElementById('confirm-delete-discord-message-btn');
+    const btnText = btn.querySelector('.btn-text');
+    const loading = btn.querySelector('.loading');
+
+    btnText.style.display = 'none';
+    loading.style.display = 'inline';
+    btn.disabled = true;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/discord-message/${messageToDelete.uuid}`, {
+            method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showSuccess('Message Discord supprimé avec succès');
+            closeDeleteDiscordMessageModal();
+            loadDiscordMessages(); // Recharger la liste
+        } else {
+            throw new Error(data.error || 'Erreur lors de la suppression');
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        showError('Impossible de supprimer le message');
+    } finally {
+        btnText.style.display = 'inline';
+        loading.style.display = 'none';
+        btn.disabled = false;
+    }
+}
+
+function refreshDiscordMessages() {
+    loadDiscordMessages();
+}
+
+// Recherche en temps réel pour les messages Discord
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search-discord-messages');
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            if (currentModule === 'discord-messages') {
+                displayDiscordMessages();
+            }
+        });
+    }
+    
+    // Event listener pour le formulaire d'ajout de message Discord
+    const discordMessageForm = document.getElementById('discord-message-form');
+    if (discordMessageForm) {
+        discordMessageForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const messageLink = document.getElementById('discord-message-link').value.trim();
+            
+            if (!messageLink) {
+                showNotification('Veuillez entrer un lien de message Discord', 'error');
+                return;
+            }
+            
+            // Validation basique du format de lien Discord
+            if (!messageLink.includes('discord.com/channels/')) {
+                showNotification('Format de lien Discord invalide', 'error');
+                return;
+            }
+            
+            await saveDiscordMessageFromLink(messageLink);
+        });
+    }
+});
