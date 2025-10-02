@@ -524,22 +524,21 @@ async function saveDiscordMessageFromLink(messageLink) {
             body: JSON.stringify({ messageLink })
         });
         
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Erreur lors de la sauvegarde');
-        }
-        
         const result = await response.json();
         
-        showNotification('✅ Message Discord sauvegardé avec succès!', 'success');
+        if (!response.ok) {
+            throw new Error(result.error || 'Erreur lors de la sauvegarde');
+        }
+        
+        showSuccess('Message Discord sauvegardé avec succès!');
         closeAddDiscordMessageModal();
         
         // Reload the messages to show the new one
         await loadDiscordMessages();
         
     } catch (error) {
-        console.error('Erreur:', error);
-        showNotification(error.message, 'error');
+        console.error('Erreur lors de la sauvegarde:', error);
+        showError(error.message || 'Erreur lors de la sauvegarde');
         
         // Reset button state
         btn.disabled = false;
@@ -553,9 +552,9 @@ async function loadDiscordMessages() {
     const grid = document.getElementById('discord-messages-grid');
     const empty = document.getElementById('discord-messages-empty');
 
-    loading.style.display = 'flex';
-    grid.style.display = 'none';
-    empty.style.display = 'none';
+    if (loading) loading.style.display = 'flex';
+    if (grid) grid.style.display = 'none';
+    if (empty) empty.style.display = 'none';
 
     try {
         const response = await fetch(`${API_BASE_URL}/discord-message`);
@@ -568,10 +567,10 @@ async function loadDiscordMessages() {
             throw new Error(data.error || 'Erreur lors du chargement des messages');
         }
     } catch (error) {
-        console.error('Erreur:', error);
+        console.error('Erreur lors du chargement des messages Discord:', error);
         showError('Impossible de charger les messages Discord');
     } finally {
-        loading.style.display = 'none';
+        if (loading) loading.style.display = 'none';
     }
 }
 
@@ -695,11 +694,11 @@ function showDeleteDiscordMessageModal(uuid) {
         </div>
     `;
     
-    modal.classList.add('active');
+    modal.style.display = 'block';
 }
 
 function closeDeleteDiscordMessageModal() {
-    document.getElementById('delete-discord-message-modal').classList.remove('active');
+    document.getElementById('delete-discord-message-modal').style.display = 'none';
     messageToDelete = null;
 }
 
@@ -724,7 +723,7 @@ async function confirmDeleteDiscordMessage() {
         if (response.ok) {
             showSuccess('Message Discord supprimé avec succès');
             closeDeleteDiscordMessageModal();
-            loadDiscordMessages(); // Recharger la liste
+            await loadDiscordMessages(); // Recharger la liste
         } else {
             throw new Error(data.error || 'Erreur lors de la suppression');
         }

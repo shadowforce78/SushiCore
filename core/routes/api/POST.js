@@ -3,6 +3,8 @@ const router = express.Router();
 const Note = require('../../DB/models/note');
 const DiscordMessage = require('../../DB/models/discordMessage');
 const crypto = require('crypto');
+const { getDiscordClient, isDiscordClientReady } = require('../../utils/discordClientProvider');
+const { fetchMessageData } = require('../../utils/discordMessageExtractor');
 
 router.post('/note', async (req, res) => {
     const { title, tags, content } = req.body;
@@ -56,20 +58,42 @@ router.post('/discord-message', async (req, res) => {
         // Générer un UUID unique
         const uuid = crypto.randomUUID();
 
-        // Pour l'instant, on sauvegarde juste le lien
-        // L'extraction du contenu pourrait être ajoutée plus tard avec des webhooks Discord ou une API
+        let messageText = 'Message sauvegardé depuis le site web';
+        let messageImage = null;
+
+        // Tenter d'utiliser le bot Discord pour récupérer les infos
+        if (isDiscordClientReady()) {
+            try {
+                const client = getDiscordClient();
+                const messageData = await fetchMessageData(client, messageLink);
+                
+                if (messageData) {
+                    messageText = messageData.messageText || messageText;
+                    messageImage = messageData.messageImage;
+                    console.log('✅ Message Discord extrait avec succès via le bot');
+                }
+            } catch (extractError) {
+                console.error('⚠️ Erreur lors de l\'extraction via le bot Discord:', extractError.message);
+                console.log('📝 Sauvegarde du message sans extraction complète');
+                // On continue quand même la sauvegarde avec les données par défaut
+            }
+        } else {
+            console.log('⚠️ Bot Discord non disponible, sauvegarde sans extraction');
+        }
+
         const newDiscordMessage = new DiscordMessage({
             uuid,
             messageLink,
-            messageText: 'Message sauvegardé depuis le site web',
-            messageImage: null
+            messageText,
+            messageImage
         });
 
         await newDiscordMessage.save();
         res.status(201).json({
             success: true,
             message: 'Message Discord sauvegardé avec succès',
-            data: newDiscordMessage
+            data: newDiscordMessage,
+            extracted: isDiscordClientReady() && messageImage !== null
         });
 
     } catch (error) {
